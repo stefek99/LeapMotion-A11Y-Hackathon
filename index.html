@@ -1,0 +1,100 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="text/javascript" src="js/smoothie.js"></script>
+    <script type="text/javascript" src="js/leap.js"></script>
+    <script type="text/javascript" src="js/jquery-2.0.2.min.js"></script>
+    <link rel="stylesheet" href="css/button.css"/>
+    <script type="text/javascript">
+
+    $(function() {
+      oPointer = {
+        $p : $("#pointer"),
+        top : 0,
+        left : 0
+      }
+
+
+      var bPaused = false;
+      $("html").keydown(function(key) {
+        if (key.keyCode == 32) {
+          console.log("PAUSE / STOP");
+          bPaused = !bPaused; // space
+        }
+      });
+      
+      var chart = new SmoothieChart({minValue:-1,maxValue:1});
+      chart.streamTo(document.getElementById("chart"), 500);
+      var x = new TimeSeries();
+      var y = new TimeSeries();
+      var z = new TimeSeries();
+      createTimeline(chart, x, { strokeStyle: 'rgba(255, 0, 0, 1)', fillStyle: 'rgba(255, 0, 0, 0.2)', lineWidth: 4 });
+      createTimeline(chart, y, { strokeStyle: 'rgba(0, 255, 0, 1)', fillStyle: 'rgba(0, 255, 0, 0.2)', lineWidth: 4 });
+      createTimeline(chart, z, { strokeStyle: 'rgba(0, 0, 255, 1)', fillStyle: 'rgba(0, 0, 255, 0.2)', lineWidth: 4 });
+
+      var controller = new Leap.Controller({enableGestures: true});
+
+        controller.loop(function(frame) {
+          if (frame.hands.length > 0 && !bPaused) {
+            // console.log(frame.hands[0].direction.x.toFixed(2) + " " + frame.hands[0].direction.y.toFixed(2)  + " " + frame.hands[0].direction.z.toFixed(2) );
+
+            x.append(new Date().getTime(), frame.hands[0].direction.x)
+            y.append(new Date().getTime(), frame.hands[0].direction.y)
+            z.append(new Date().getTime(), frame.hands[0].direction.z)
+
+            MovePointer(frame.hands[0].direction.x, frame.hands[0].direction.y);
+          }
+        });
+      });
+      
+      function createTimeline(oChart, oTimeSeries, oOptions) {
+        oChart.addTimeSeries(oTimeSeries, oOptions);
+      }
+
+      function MovePointer(x, y) {
+        oPointer.left += 10 * x;
+        oPointer.top -= 10 * y;
+
+
+
+        oPointer.left = oPointer.left < 0 ? 0 : oPointer.left;
+        oPointer.top = oPointer.top < 0 ? 0 : oPointer.top;
+
+        oPointer.left = oPointer.left > window.innerWidth - 50 ? window.innerWidth - 50 : oPointer.left;
+        oPointer.top = oPointer.top > window.innerHeight - 50 ? window.innerHeight - 50 : oPointer.top;
+
+        oPointer.$p.css({"left": oPointer.left, "top" : oPointer.top});
+      }
+  
+    </script>
+
+    <style>
+      #pointer {
+        background : url("img/mouse.png");
+        display: block;
+        width: 120px;
+        height: 130px;
+        position: fixed;
+
+        -webkit-transition: 1.0s ease-in-out;
+        -moz-transition: 1.0s ease-in-out;
+        -o-transition: 1.0s ease-in-out;
+        -ms-transition: 1.0s ease-in-out;        
+        transition: 1.0s ease-in-out;
+      }
+
+      #pointerhover {
+        background : url("img/mouse-yellow.png");
+      }
+    </style>
+  </head>
+  <body>
+
+    <div id="pointer"></div>
+    <canvas id="chart" width="400" height="100"></canvas>
+
+    <div class="button">Click me!</div>
+
+  </body>
+</html>
