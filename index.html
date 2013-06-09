@@ -2,10 +2,15 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <title>A11Y Leap Motion</title>
     <script type="text/javascript" src="js/smoothie.js"></script>
     <script type="text/javascript" src="js/leap.js"></script>
-    <script type="text/javascript" src="js/jquery-2.0.2.min.js"></script>
+    <script type="text/javascript" src="js/jquery-1.7.1.min.js"></script>
+    <script type="text/javascript" src="js/jquery.fancybox.pack.js"></script>
+    <link rel="stylesheet" href="css/jquery.fancybox.css" />
     <link rel="stylesheet" href="css/button.css"/>
+    <link rel="stylesheet" href="css/normalize.css"/>
+    <link rel="stylesheet" href="css/foundation.css"/>
     <script type="text/javascript">
 
     $(function() {
@@ -44,6 +49,10 @@
         });
       }
 
+      $("#hidden_link").fancybox({
+        'scrolling': 'no'
+      });
+
     });
       
     function createTimeline(oChart, oTimeSeries, oOptions) {
@@ -52,13 +61,51 @@
 
     RecentMovements = function() {
       var pMe = this;
-      var maxLen = 10;
+      var maxLen = 30;
       this.storage = new Array(maxLen);
       this.index = 0;
       this.StorePoint = function(nPoint) {
-        console.log(nPoint)
         pMe.storage[pMe.index++ % maxLen] = nPoint
+
+        //pMe._PrintRecent();
+
+        var prevValue = pMe.storage[(pMe.index - 30) % maxLen];
+        for (var i = pMe.index - 29; i < pMe.index - 15; i++) {
+          var current = pMe.storage[i%maxLen];
+          if (current < prevValue) {
+            //OK
+          } else {
+            return {gesture: false}
+          }
+          prevValue = current;
+        }
+
+        for (var i = pMe.index - 14; i < pMe.index; i++) {
+          var current = pMe.storage[i%maxLen];
+          if (current > prevValue) {
+            //OK
+          } else {
+            return {gesture: false}
+          }
+          prevValue = current;
+        }
+
+        return {gesture: "click"}
       }
+
+      // this._PrintRecent = function() {
+      //   var buffer = "";
+      //   var buffer2 = "";
+      //   var prev = pMe.index - 10;
+      //   for (var i = pMe.index - 10; i < pMe.index; i++) {
+      //     var current = pMe.storage[i%maxLen];
+      //     buffer += current.toFixed(2) + " ";
+      //     buffer2 += current > prev ? "+" : "-";
+      //     prev = current;
+      //   }
+      //   //console.log(buffer);
+      //   console.log(buffer2);
+      // }
     }
 
     function MovePointer(aRecentMovements, x, y) {
@@ -79,7 +126,7 @@
       } else {
 
         // we are snapped, if move by treshold greater than 50 pixels then release
-        if (Math.abs(oPointer.left - oSnappedPos.x) > 50 || Math.abs(oPointer.top - oSnappedPos.y) > 50 ) {
+        if (Math.abs(oPointer.left - oSnappedPos.x) > 100 || Math.abs(oPointer.top - oSnappedPos.y) > 100 ) {
           bSnapped = false;
           bAfterEscape = true;
           oPointer.$p.removeClass("hover");
@@ -88,7 +135,10 @@
         }
 
         //CLICK Business
-        aRecentMovements.StorePoint(oPointer.top);
+        var gesture = aRecentMovements.StorePoint(oPointer.top);
+        if (gesture.gesture == "click") {
+          $snapped.click();
+        }
 
       }
       
@@ -98,6 +148,7 @@
       // when snapping for the first time we do some business here
       if ($el.hasClass("snappable")) {
         if (bSnapped == false && bAfterEscape == false) {
+          $snapped = $el; // storing for future to trigger click
           var elWidth = $el.width();
           var elHeight = $el.height();
           var elOffset = $el.offset();
@@ -111,8 +162,6 @@
       } else {
         bAfterEscape = false;
       }
-
-
     }
   
     </script>
@@ -124,20 +173,38 @@
         width: 120px;
         height: 130px;
         position: fixed;
+        z-index: 2;
       }
 
       #pointer.hover {
         background : url("img/mouse-yellow.png");
       }
+
+      .button {
+         position: fixed;
+         top: 210px;
+         left: 210px;
+         z-index: 1;
+      }
     </style>
   </head>
   <body>
-
+    <h1>A11Y Leap Motion</h1>
     <div id="pointer"></div>
     
     <canvas id="chart" width="400" height="100"></canvas>
 
-    <div class="button snappable">Click me!</div>
+    <a class="fancybox button snappable" href="#inline1" title="You have successfully completed quest" id="hidden_link">Click me!</a>
+
+
+  <div style="display: none;">
+    <div id="inline1" style="width:640; height:350; overflow : auto; ">
+      <p>
+        <h2>Good one, you rock!</h2>            
+      </p>
+    </div>
+  </div>
+
 
   </body>
 </html>
