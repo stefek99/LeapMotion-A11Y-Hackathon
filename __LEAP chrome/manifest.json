@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Leap Motion Accessibility (A11Y) Controller",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Weekend project for Accessibility Hackathon. Check out sources at github: https://github.com/stefek99/LeapMotion-A11Y-Hackathon",
   "icons": {
     "48" : "sample-48.png",

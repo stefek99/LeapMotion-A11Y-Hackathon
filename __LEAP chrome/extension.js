@@ -1,4 +1,10 @@
 $(function() {
+
+
+// http://stackoverflow.com/questions/2420970/how-can-i-get-selector-from-jquery-object/15623322#15623322
+!function(e,t){get_selector=function(e){pieces=[];for(;e&&e.tagName!==t;e=e.parentNode){if(e.className){var n=e.className.split(" ");for(var r in n){if(n.hasOwnProperty(r)&&n[r]){pieces.unshift(n[r]);pieces.unshift(".")}}}if(e.id&&!/\s/.test(e.id)){pieces.unshift(e.id);pieces.unshift("#")}pieces.unshift(e.tagName);pieces.unshift(" > ")}return pieces.slice(1).join("")};e.fn.getSelector=function(t){if(true===t){return get_selector(this[0])}else{return e.map(this,function(e){return get_selector(e)})}}}(window.jQuery)
+
+
   oPointer = {
     $p : $("#pointer"),
     top : 0,
@@ -115,8 +121,27 @@ function MovePointer(aRecentMovements, x, y) {
 
     if (gesture.gesture == "click") {
 
+      var selectorString = $snapped.getSelector();
 
-      chrome.tabs.executeScript(null,{code:"alert('hello!');"}) 
+/////////////////////////////
+
+    var actualCode = '(' + function(selector) {
+
+
+        $(selector[0]).click();
+
+
+    } + ')(' + JSON.stringify(selectorString) + ');';
+
+
+
+    var script = document.createElement('script');
+    script.textContent = actualCode;
+    (document.head||document.documentElement).appendChild(script);
+    script.parentNode.removeChild(script);
+
+/////////////////////////////
+
 
       console.log("performing click on snapped element")
 
