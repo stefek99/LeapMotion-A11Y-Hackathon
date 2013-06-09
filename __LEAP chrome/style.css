@@ -1,0 +1,12 @@
+#pointer {
+  background : url("http://i273.photobucket.com/albums/jj226/stefek99/mouse_zpseb7a84f1.png");
+  display: block;
+  width: 120px;
+  height: 130px;
+  position: fixed;
+  z-index: 1000;
+}
+
+#pointer.hover {
+  background : url("http://i273.photobucket.com/albums/jj226/stefek99/mouse-yellow_zps5bfec77a.png");
+}
