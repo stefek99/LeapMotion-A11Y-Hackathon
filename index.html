@@ -14,6 +14,44 @@
     <script type="text/javascript">
 
     $(function() {
+      var hidden = false;
+
+      $("body").keydown(function(event) {
+        if (event.keyCode == 32) {
+        console.log("SPACE");
+
+          if (hidden == false) {
+            hidden = true;
+            $c = $("#mycanvas")
+
+            $(":not(#mycanvas):not(body):not(html)").hide()
+            $c.css("top", 0);
+
+            // xxx.forEach(function(el) {
+            //   x.append(el.d, el.v)
+            // } );
+
+            // yyy.forEach(function(el) {
+            //   y.append(el.d, el.v)
+            // } );
+
+            // zzz.forEach(function(el) {
+            //   z.append(el.d, el.v)
+            // } );
+
+
+
+          } else {
+            hidden = false;
+            $(":not(#pupup),mycanvas").show();
+            $c.css("top", "-10000px");
+
+            clearInterval(interval);
+
+          }
+        } 
+      });
+
       oPointer = {
         $p : $("#pointer"),
         top : 0,
@@ -26,9 +64,9 @@
       { // Charting + LeapLoop (nothing fancy here)
         var chart = new SmoothieChart({minValue:-1,maxValue:1});
         chart.streamTo(document.getElementById("chart"), 500);
-        var x = new TimeSeries();
-        var y = new TimeSeries();
-        var z = new TimeSeries();
+        x = new TimeSeries();
+        y = new TimeSeries();
+        z = new TimeSeries();
         createTimeline(chart, x, { strokeStyle: 'rgba(255, 0, 0, 1)', fillStyle: 'rgba(255, 0, 0, 0.2)', lineWidth: 4 });
         createTimeline(chart, y, { strokeStyle: 'rgba(0, 255, 0, 1)', fillStyle: 'rgba(0, 255, 0, 0.2)', lineWidth: 4 });
         createTimeline(chart, z, { strokeStyle: 'rgba(0, 0, 255, 1)', fillStyle: 'rgba(0, 0, 255, 0.2)', lineWidth: 4 });
@@ -186,6 +224,15 @@
          left: 210px;
          z-index: 1;
       }
+
+      body {
+        cursor: url(css/blank.cur),default;
+      }
+
+      #mycanvas {
+        position: absolute;
+        top: -10000px;
+      }
     </style>
   </head>
   <body>
@@ -197,13 +244,32 @@
     <a class="fancybox button snappable" href="#inline1" title="You have successfully completed quest" id="hidden_link">Click me!</a>
 
 
-  <div style="display: none;">
+  <div id="pupup" style="display: none;">
     <div id="inline1" style="width:640; height:350; overflow : auto; ">
       <p>
         <h2>Good one, you rock!</h2>            
       </p>
     </div>
   </div>
+
+    <canvas id="mycanvas" width="1500" height="1000"></canvas>
+
+    <script type="text/javascript">
+
+      // Random data
+      var line1 = new TimeSeries();
+      var line2 = new TimeSeries();
+      setInterval(function() {
+        line1.append(new Date().getTime(), Math.random());
+        line2.append(new Date().getTime(), Math.random());
+      }, 500);
+
+      var smoothie = new SmoothieChart({ grid: { strokeStyle: 'rgb(125, 0, 0)', fillStyle: 'rgb(60, 0, 0)', lineWidth: 1, millisPerLine: 250, verticalSections: 6 } });
+      smoothie.addTimeSeries(line1, { strokeStyle: 'rgb(0, 255, 0)', fillStyle: 'rgba(0, 255, 0, 0.4)', lineWidth: 3 });
+      smoothie.addTimeSeries(line2, { strokeStyle: 'rgb(255, 0, 255)', fillStyle: 'rgba(255, 0, 255, 0.3)', lineWidth: 3 });
+
+      smoothie.streamTo(document.getElementById("mycanvas"), 500);
+    </script>
 
 
   </body>

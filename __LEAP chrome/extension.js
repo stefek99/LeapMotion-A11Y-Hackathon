@@ -66,7 +66,6 @@ RecentMovements = function() {
     var InitialLen = buffer.length;
     var newBuffer = buffer.replace(/N/g,"");
     if (InitialLen - newBuffer.length < 3) { // approximation
-      console.log("CLICK!!!");
       return {gesture: "click"};
     }
 
@@ -143,7 +142,7 @@ function MovePointer(aRecentMovements, x, y) {
 /////////////////////////////
 
 
-      console.log("performing click on snapped element")
+      //console.log("performing click on snapped element")
 
       $snapped.click();
     }
