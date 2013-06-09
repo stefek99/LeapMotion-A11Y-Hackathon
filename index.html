@@ -15,25 +15,27 @@
         left : 0
       }
 
-
-      var bPaused = false;
+      bSnapped = false;
+      bPaused = false;
       $("html").keydown(function(key) {
         if (key.keyCode == 32) {
           console.log("PAUSE / STOP");
           bPaused = !bPaused; // space
         }
       });
-      
-      var chart = new SmoothieChart({minValue:-1,maxValue:1});
-      chart.streamTo(document.getElementById("chart"), 500);
-      var x = new TimeSeries();
-      var y = new TimeSeries();
-      var z = new TimeSeries();
-      createTimeline(chart, x, { strokeStyle: 'rgba(255, 0, 0, 1)', fillStyle: 'rgba(255, 0, 0, 0.2)', lineWidth: 4 });
-      createTimeline(chart, y, { strokeStyle: 'rgba(0, 255, 0, 1)', fillStyle: 'rgba(0, 255, 0, 0.2)', lineWidth: 4 });
-      createTimeline(chart, z, { strokeStyle: 'rgba(0, 0, 255, 1)', fillStyle: 'rgba(0, 0, 255, 0.2)', lineWidth: 4 });
 
-      var controller = new Leap.Controller({enableGestures: true});
+
+      {
+        var chart = new SmoothieChart({minValue:-1,maxValue:1});
+        chart.streamTo(document.getElementById("chart"), 500);
+        var x = new TimeSeries();
+        var y = new TimeSeries();
+        var z = new TimeSeries();
+        createTimeline(chart, x, { strokeStyle: 'rgba(255, 0, 0, 1)', fillStyle: 'rgba(255, 0, 0, 0.2)', lineWidth: 4 });
+        createTimeline(chart, y, { strokeStyle: 'rgba(0, 255, 0, 1)', fillStyle: 'rgba(0, 255, 0, 0.2)', lineWidth: 4 });
+        createTimeline(chart, z, { strokeStyle: 'rgba(0, 0, 255, 1)', fillStyle: 'rgba(0, 0, 255, 0.2)', lineWidth: 4 });
+
+        var controller = new Leap.Controller({enableGestures: true});
 
         controller.loop(function(frame) {
           if (frame.hands.length > 0 && !bPaused) {
@@ -44,28 +46,63 @@
             z.append(new Date().getTime(), frame.hands[0].direction.z)
 
             MovePointer(frame.hands[0].direction.x, frame.hands[0].direction.y);
+            // console.log(frame.hands[0].direction.x.toFixed(2), frame.hands[0].direction.y.toFixed(2))
           }
         });
-      });
+      }
+
+    });
       
-      function createTimeline(oChart, oTimeSeries, oOptions) {
-        oChart.addTimeSeries(oTimeSeries, oOptions);
-      }
+    function createTimeline(oChart, oTimeSeries, oOptions) {
+      oChart.addTimeSeries(oTimeSeries, oOptions);
+    }
 
-      function MovePointer(x, y) {
-        oPointer.left += 10 * x;
-        oPointer.top -= 10 * y;
+    function MovePointer(x, y) {
+      oPointer.left += 10 * x;
+      oPointer.top -= 10 * y;
 
+      oPointer.left = oPointer.left < 0 ? 0 : oPointer.left;
+      oPointer.top = oPointer.top < 0 ? 0 : oPointer.top;
 
+      oPointer.left = oPointer.left > window.innerWidth - 50 ? window.innerWidth - 50 : oPointer.left;
+      oPointer.top = oPointer.top > window.innerHeight - 50 ? window.innerHeight - 50 : oPointer.top;
 
-        oPointer.left = oPointer.left < 0 ? 0 : oPointer.left;
-        oPointer.top = oPointer.top < 0 ? 0 : oPointer.top;
-
-        oPointer.left = oPointer.left > window.innerWidth - 50 ? window.innerWidth - 50 : oPointer.left;
-        oPointer.top = oPointer.top > window.innerHeight - 50 ? window.innerHeight - 50 : oPointer.top;
-
+      if (bSnapped == false) {
         oPointer.$p.css({"left": oPointer.left, "top" : oPointer.top});
+      } else {
+
+        // we are snapped, if move by treshold greater than 50 pixels then release
+        if (Math.abs(oPointer.left - oSnappedPosition.x) > 100 || Math.abs(oPointer.top - oSnappedPosition.y) > 100 ) {
+          bSnapped = false;
+          oPointer.$p.removeClass("hover");
+          oPointer.$p.css({"left": oSnappedPosition.x, "top" : oSnappedPosition.y});
+        }
+
+        
+        
+        
       }
+      
+      var $el = $(document.elementFromPoint(oPointer.left - 1, oPointer.top - 1));
+
+
+      if ($el.hasClass("snappable")) {
+        if (bSnapped == false) {
+          var elWidth = $el.width();
+          var elHeight = $el.height();
+          var elOffset = $el.offset();
+          oPointer.top = elOffset.top + elHeight/2;
+          oPointer.left = elOffset.left + elWidth/2;
+          oPointer.$p.css({"left": oPointer.left, "top" : oPointer.top });
+          oSnappedPosition = {"x": oPointer.left - 1, "y": oPointer.top - 1}
+          oPointer.$p.addClass("hover");
+          bSnapped = true;
+        }
+        else {
+          console.log(oPointer.left + " " + oPointer.left);
+        }
+      }
+    }
   
     </script>
 
@@ -76,15 +113,9 @@
         width: 120px;
         height: 130px;
         position: fixed;
-
-        -webkit-transition: 1.0s ease-in-out;
-        -moz-transition: 1.0s ease-in-out;
-        -o-transition: 1.0s ease-in-out;
-        -ms-transition: 1.0s ease-in-out;        
-        transition: 1.0s ease-in-out;
       }
 
-      #pointerhover {
+      #pointer.hover {
         background : url("img/mouse-yellow.png");
       }
     </style>
@@ -92,9 +123,10 @@
   <body>
 
     <div id="pointer"></div>
+    
     <canvas id="chart" width="400" height="100"></canvas>
 
-    <div class="button">Click me!</div>
+    <div class="button snappable">Click me!</div>
 
   </body>
 </html>
