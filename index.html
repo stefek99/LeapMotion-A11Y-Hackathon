@@ -14,18 +14,11 @@
         top : 0,
         left : 0
       }
-
+      aRecentMovements = new RecentMovements();
       bSnapped = false;
       bPaused = false;
-      $("html").keydown(function(key) {
-        if (key.keyCode == 32) {
-          console.log("PAUSE / STOP");
-          bPaused = !bPaused; // space
-        }
-      });
 
-
-      {
+      { // Charting + LeapLoop (nothing fancy here)
         var chart = new SmoothieChart({minValue:-1,maxValue:1});
         chart.streamTo(document.getElementById("chart"), 500);
         var x = new TimeSeries();
@@ -45,7 +38,7 @@
             y.append(new Date().getTime(), frame.hands[0].direction.y)
             z.append(new Date().getTime(), frame.hands[0].direction.z)
 
-            MovePointer(frame.hands[0].direction.x, frame.hands[0].direction.y);
+            MovePointer(aRecentMovements, frame.hands[0].direction.x, frame.hands[0].direction.y);
             // console.log(frame.hands[0].direction.x.toFixed(2), frame.hands[0].direction.y.toFixed(2))
           }
         });
@@ -57,13 +50,27 @@
       oChart.addTimeSeries(oTimeSeries, oOptions);
     }
 
-    function MovePointer(x, y) {
+    RecentMovements = function() {
+      var pMe = this;
+      var maxLen = 10;
+      this.storage = new Array(maxLen);
+      this.index = 0;
+      this.StorePoint = function(nPoint) {
+        console.log(nPoint)
+        pMe.storage[pMe.index++ % maxLen] = nPoint
+      }
+    }
+
+    function MovePointer(aRecentMovements, x, y) {
+      if (bSnapped) { // slowing down a little bit, so it actually snaps
+        x /= 3;
+        y /= 3;
+      }
+
       oPointer.left += 10 * x;
       oPointer.top -= 10 * y;
-
       oPointer.left = oPointer.left < 0 ? 0 : oPointer.left;
       oPointer.top = oPointer.top < 0 ? 0 : oPointer.top;
-
       oPointer.left = oPointer.left > window.innerWidth - 50 ? window.innerWidth - 50 : oPointer.left;
       oPointer.top = oPointer.top > window.innerHeight - 50 ? window.innerHeight - 50 : oPointer.top;
 
@@ -72,36 +79,40 @@
       } else {
 
         // we are snapped, if move by treshold greater than 50 pixels then release
-        if (Math.abs(oPointer.left - oSnappedPosition.x) > 100 || Math.abs(oPointer.top - oSnappedPosition.y) > 100 ) {
+        if (Math.abs(oPointer.left - oSnappedPos.x) > 50 || Math.abs(oPointer.top - oSnappedPos.y) > 50 ) {
           bSnapped = false;
+          bAfterEscape = true;
           oPointer.$p.removeClass("hover");
-          oPointer.$p.css({"left": oSnappedPosition.x, "top" : oSnappedPosition.y});
+
+          oPointer.$p.css({"left": oSnappedPos.x, "top" : oSnappedPos.y});
         }
 
-        
-        
-        
+        //CLICK Business
+        aRecentMovements.StorePoint(oPointer.top);
+
       }
       
-      var $el = $(document.elementFromPoint(oPointer.left - 1, oPointer.top - 1));
+      // Checking if element we are currently on
+      $el = $(document.elementFromPoint(oPointer.left - 1, oPointer.top - 1));
 
-
+      // when snapping for the first time we do some business here
       if ($el.hasClass("snappable")) {
-        if (bSnapped == false) {
+        if (bSnapped == false && bAfterEscape == false) {
           var elWidth = $el.width();
           var elHeight = $el.height();
           var elOffset = $el.offset();
           oPointer.top = elOffset.top + elHeight/2;
           oPointer.left = elOffset.left + elWidth/2;
           oPointer.$p.css({"left": oPointer.left, "top" : oPointer.top });
-          oSnappedPosition = {"x": oPointer.left - 1, "y": oPointer.top - 1}
+          oSnappedPos = {"x": oPointer.left - 1, "y": oPointer.top - 1}
           oPointer.$p.addClass("hover");
           bSnapped = true;
         }
-        else {
-          console.log(oPointer.left + " " + oPointer.left);
-        }
+      } else {
+        bAfterEscape = false;
       }
+
+
     }
   
     </script>
